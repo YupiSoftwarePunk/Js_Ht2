@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Стартовая страница</title>
+        <link rel="stylesheet" href="css/style.css">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;700&display=swap" rel="stylesheet">
+        <script src="js/main.js" defer></script>
+        <script src="js/navigation.js" defer></script>
+    </head>
+
+    <body>
+        <header>
+            <h1>Сайт мистера Денискиса</h1>
+            <a href="/" class="logo-link">
+                <img src="img/cover.jpg" alt="Логотип сайта" class="logo-image" height="100" width="100">
+            </a>
+            <nav class="main-nav" >
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="index.html" class="nav-link">Главная</a></li>
+                    <li class="nav-item"><a href="about.html" class="nav-link"> О нас</a></li>
+                    <li class="nav-item"><a href="contact.html" class="nav-link">Контакты</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <p>Добро пожаловать на наш сайт!</p>
+            <p>Здесь вы найдете много интересной информации.</p><br>
+
+            <form method="post">
+                <input type="text" placeholder="Пост 1">
+            </form>
+
+            <select id="sort-posts">
+                <option value="default">Без сортировки</option>
+                <option value="date">По дате (сначала новые)</option>
+                <option value="views">По просмотрам</option>
+            </select>
+
+            <ul id="post-list">
+                <li data-date="2023-10-01" data-views="150" data-tags="js, frontend" data-content="Текст о формах">Пост 1</li>
+                <li data-date="2024-01-15" data-views="500" data-tags="html, css" data-content="Текст о верстке">Пост 2</li>
+                <li data-date="2023-12-20" data-views="50" data-tags="life, blog" data-content="Мои мысли сегодня">Пост 3</li>
+                <li data-date="2024-02-01" data-views="300" data-tags="js, react" data-content="Текст про реакт">Пост 4</li>
+                <li data-date="2023-05-10" data-views="1000" data-tags="news" data-content="Важное объявление">Пост 5</li>
+            </ul>
+            <p id="no-results" style="display: none; color: red;">По вашему запросу ничего не найдено</p>
+        </main>
+
+        <footer>
+
+        </footer>
+    </body>
+</html>
