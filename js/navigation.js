@@ -16,49 +16,6 @@ function highlightActiveLink()
     }
 }
 
-
-// function FilterPosts()
-// {
-//     var posts = document.querySelectorAll('ul li');
-//     var inputFields = document.querySelector('input');
-//     var noResultsMessage = document.getElementById('no-results');
-
-//     var postList = [];
-//     for (let i = 0; i < posts.length; i++)
-//     {
-//         postList.push(posts[i].innerText);
-//     }
-
-//     inputFields.addEventListener('input', function() {
-//         const searchText = inputFields.value.toLowerCase(); 
-//         let hasMatches = false;
-
-//         const filteredList = postList.filter(post => {
-//             return post.toLowerCase().includes(searchText);
-//         });
-
-//         posts.forEach(li => {
-//             const text = li.innerText.toLowerCase();
-//             if (text.includes(searchText)) {
-//                 li.style.display = ""; 
-//                 hasMatches = true;
-//             } 
-//             else {
-//                 li.style.display = "none";
-//             }
-//         });
-
-//         if (hasMatches) 
-//         {
-//             noResultsMessage.style.display = "none";
-//         } 
-//         else 
-//         {
-//             noResultsMessage.style.display = "block";
-//         }
-//     });
-// }
-
 function FilterPosts() {
     const inputField = document.querySelector('input');
     const noResultsMessage = document.getElementById('no-results');
@@ -112,4 +69,26 @@ function FilterPosts() {
 
     inputField.addEventListener('input', update);
     sortSelect.addEventListener('change', update);
+}
+
+
+function getFriendlyDate(dateStr) 
+{
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 86400 && diffInSeconds >= 0) 
+    {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return hours === 0 ? "Только что" : `${hours} часа(ов) назад`;
+    } 
+    else if (diffInSeconds < 172800 && diffInSeconds >= 0) 
+    {
+        return "Вчера";
+    } 
+    else 
+    {
+        return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
 }
