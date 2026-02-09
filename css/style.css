@@ -1,0 +1,93 @@
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    padding: 20px 50px;
+    background-color: #f8f9fa; 
+    gap: 20px; 
+    flex-wrap: wrap;
+}
+
+.logo-link {
+    order: -1; 
+}
+
+.logo-image {
+    border-radius: 50%; 
+    object-fit: cover;
+}
+
+h1 {
+    margin: 0;
+    flex-grow: 1; 
+}
+
+.main-nav {
+    width: 100%; 
+    margin-top: 10px;
+}
+
+.nav-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    transition: 0.3s;
+}
+
+.nav-link:hover {
+    opacity: 0.7;
+}
+
+main {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+input[type="text"], select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 300px;
+}
+
+#post-list {
+    list-style: none;
+    padding: 0;
+}
+
+#post-list li {
+    background: #fff;
+    border: 1px solid #eee;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s;
+}
+
+#post-list li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.today-post {
+    border-left: 5px solid #ff4757;
+    padding-left: 10px;
+}
