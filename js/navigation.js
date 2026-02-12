@@ -18,96 +18,108 @@ function highlightActiveLink()
 
 
 function FilterPosts() {
-    const inputField = document.querySelector('input');
-    const noResultsMessage = document.getElementById('no-results');
-    const sortSelect = document.getElementById('sort-posts');
-    const list = document.getElementById('post-list');
-    const blogStatsContainer = document.getElementById('blog-stats'); 
-    
-    const posts = Array.from(list.querySelectorAll('li')).map(li => {
+    const elements = {
+        input: document.querySelector('input'),
+        list: document.getElementById('post-list'),
+        stats: document.getElementById('stats-content'),
+        readability: document.getElementById('filter-readability'),
+        sort: document.getElementById('sort-posts'),
+        exportBtn: document.getElementById('export-csv'),
+        noResults: document.getElementById('no-results')
+    };
+
+    if (!elements.list || !elements.input) 
+        return;
+
+    const posts = Array.from(elements.list.querySelectorAll('li')).map(li => {
         const rawContent = li.dataset.content || "";
-        const stats = analyzeText(rawContent); 
-        
+        const postDate = new Date(li.dataset.date);
         return {
             element: li,
-            title: li.innerText,
+            titleNode: li.querySelector('.post-title'),
+            dateNode: li.querySelector('.stats-date'),
+            timeNode: li.querySelector('.stats-read-time'),
+            detailsNode: li.querySelector('.stats-details'),
+            
+            originalTitle: li.querySelector('.post-title')?.textContent || li.textContent,
             content: rawContent.toLowerCase(),
-            tags: li.dataset.tags.toLowerCase(),
-            date: new Date(li.dataset.date),
-            views: parseInt(li.dataset.views),
-            stats: stats 
+            tags: (li.dataset.tags || "").toLowerCase(),
+            date: isNaN(postDate.getTime()) ? new Date() : postDate, 
+            views: parseInt(li.dataset.views) || 0,
+            stats: analyzeText(rawContent)
         };
     });
 
     function update() {
-        const searchText = inputField.value.toLowerCase();
-        const sortBy = sortSelect.value;
-        let hasMatches = false;
+        const searchText = elements.input.value.toLowerCase();
+        const complexityLimit = elements.readability ? parseFloat(elements.readability.value) : 0;
+        const sortBy = elements.sort ? elements.sort.value : 'default';
+        let visiblePosts = [];
 
         posts.forEach(post => {
-            const fullSearchText = (post.title + post.content + post.tags).toLowerCase();
-            const isMatch = fullSearchText.includes(searchText);
+            const isTextMatch = (post.originalTitle.toLowerCase() + post.content + post.tags).includes(searchText);
+            
+            let isComplexityMatch = true;
+            if (complexityLimit === 20) isComplexityMatch = post.stats.readability < 20;
+            if (complexityLimit === 40) isComplexityMatch = post.stats.readability >= 20 && post.stats.readability < 40;
+            if (complexityLimit === 60) isComplexityMatch = post.stats.readability >= 40;
 
-            if (isMatch) {
-                post.element.style.display = "";
-                hasMatches = true;
-                
-                const dateInfo = getFriendlyDate(post.element.dataset.date);
-                const highlightClass = (new Date(post.element.dataset.date).toDateString() === new Date().toDateString()) ? 'today-post' : '';
-                
-                let titleHTML = post.title;
-                if (searchText !== "") {
-                    const regex = new RegExp(`(${searchText})`, "gi");
-                    titleHTML = post.title.replace(regex, '<mark>$1</mark>');
+            const isVisible = isTextMatch && isComplexityMatch;
+            post.element.style.display = isVisible ? "" : "none";
+
+            if (isVisible) {
+                visiblePosts.push(post);
+
+                if (post.dateNode) post.dateNode.textContent = getFriendlyDate(post.element.dataset.date);
+                if (post.timeNode) post.timeNode.textContent = `⏱ ${post.stats.readTime} мин.`;
+                if (post.detailsNode) {
+                    post.detailsNode.textContent = `(Слов: ${post.stats.words}, LIX: ${post.stats.readability})`;
                 }
 
-                post.element.innerHTML = `
-                    <div class="${highlightClass}">
-                        <strong>${titleHTML}</strong>
-                        <div class="stats" style="font-size: 0.8em; color: gray;">
-                            ${dateInfo} | Читать: ${post.stats.readTime} мин. | Слов: ${post.stats.words}
-                            <br>Символов: ${post.stats.chars} (без пр.: ${post.stats.charsNoSpace}) | Предл.: ${post.stats.sentences} | Сложность: ${post.stats.readability}
-                        </div>
-                    </div>
-                `;
-            } else {
-                post.element.style.display = "none";
+                if (searchText !== "" && post.titleNode) {
+                    const escapedTitle = post.originalTitle.replace(/[&<>"']/g, m => ({
+                        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                    }[m]));
+                    const regex = new RegExp(`(${searchText})`, "gi");
+                    post.titleNode.innerHTML = escapedTitle.replace(regex, '<mark>$1</mark>');
+                } else if (post.titleNode) {
+                    post.titleNode.textContent = post.originalTitle;
+                }
             }
         });
 
-        const visiblePosts = posts.filter(p => p.element.style.display !== "none");
-        
         if (sortBy !== "default") {
-            visiblePosts.sort((a, b) => {
-                return sortBy === 'date' ? b.date - a.date : b.views - a.views;
-            });
-            visiblePosts.forEach(post => list.appendChild(post.element));
+            visiblePosts.sort((a, b) => sortBy === 'date' ? b.date - a.date : b.views - a.views);
+            visiblePosts.forEach(post => elements.list.appendChild(post.element));
         }
 
-        noResultsMessage.style.display = hasMatches ? "none" : "block";
-        updateBlogStats(visiblePosts);
+        if (elements.noResults) {
+            elements.noResults.style.display = visiblePosts.length > 0 ? "none" : "block";
+        }
+
+        updateBlogStats(visiblePosts, elements.stats);
+        drawChart(visiblePosts);
     }
 
-    function updateBlogStats(visiblePosts) {
-        if (!blogStatsContainer) return;
-        
-        const totalWords = visiblePosts.reduce((acc, p) => acc + p.stats.words, 0);
-        const avgReadTime = visiblePosts.length ? (totalWords / (visiblePosts.length * 200)).toFixed(1) : 0;
-        
-        const allTags = visiblePosts.flatMap(p => p.tags.split(',').map(t => t.trim()));
-        const tagCounts = allTags.reduce((acc, t) => { acc[t] = (acc[t] || 0) + 1; return acc; }, {});
-        const topTag = Object.keys(tagCounts).reduce((a, b) => tagCounts[a] > tagCounts[b] ? a : b, "—");
-
-        blogStatsContainer.innerHTML = `
-            <h3>Общая статистика:</h3>
-            <p>Всего слов: ${totalWords} | Ср. время чтения: ${avgReadTime} мин.</p>
-            <p>Популярный тег: ${topTag}</p>
-        `;
+    elements.input.addEventListener('input', update);
+    if (elements.readability) elements.readability.addEventListener('change', update);
+    if (elements.sort) elements.sort.addEventListener('change', update);
+    
+    if (elements.exportBtn) {
+        elements.exportBtn.addEventListener('click', () => {
+            let csv = "Title,Date,Views,LIX\n";
+            posts.forEach(p => {
+                csv += `"${p.originalTitle}",${p.date.toLocaleDateString()},${p.views},${p.stats.readability}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "statistics.csv";
+            link.click();
+        });
     }
 
-    inputField.addEventListener('input', update);
-    sortSelect.addEventListener('change', update);
-    update(); 
+    update();
 }
 
 
@@ -159,3 +171,55 @@ function analyzeText(text) {
 }
 
 
+function drawChart(visiblePosts) {
+    const canvas = document.getElementById('publish-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (visiblePosts.length === 0) return;
+
+    const months = new Array(12).fill(0);
+    visiblePosts.forEach(p => {
+        if (p.date instanceof Date && !isNaN(p.date)) {
+            months[p.date.getMonth()]++;
+        }
+    });
+
+    const max = Math.max(...months) || 1;
+    const barWidth = 20;
+    const spacing = 10;
+
+    ctx.fillStyle = "#ff4757";
+    months.forEach((count, i) => {
+        const barHeight = (count / max) * (canvas.height - 20);
+        const x = 20 + i * (barWidth + spacing);
+        const y = canvas.height - barHeight - 15;
+        
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        ctx.fillStyle = "#333";
+        ctx.font = "10px Arial";
+        ctx.fillText(i + 1, x + 5, canvas.height - 2);
+        ctx.fillStyle = "#ff4757";
+    });
+}
+
+
+function updateBlogStats(visiblePosts, container) {
+    if (!container) return;
+
+    const totalWords = visiblePosts.reduce((acc, p) => acc + p.stats.words, 0);
+    const avgReadTime = visiblePosts.length ? (totalWords / (visiblePosts.length * 200)).toFixed(1) : 0;
+
+    const tagsMap = {};
+    visiblePosts.forEach(p => {
+        p.tags.split(',').forEach(tag => {
+            const t = tag.trim();
+            if (t) tagsMap[t] = (tagsMap[t] || 0) + 1;
+        });
+    });
+    const topCategory = Object.keys(tagsMap).reduce((a, b) => tagsMap[a] > tagsMap[b] ? a : b, "—");
+
+    container.textContent = `Общее кол-во слов: ${totalWords} | Ср. время чтения: ${avgReadTime} мин. | Категория: ${topCategory}`;
+}

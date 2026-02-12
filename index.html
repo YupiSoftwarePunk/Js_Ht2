@@ -40,13 +40,61 @@
             </select>
 
             <ul id="post-list">
-                <li data-date="2023-10-01" data-views="150" data-tags="js, frontend" data-content="Текст о формах">Пост 1</li>
-                <li data-date="2024-01-15" data-views="500" data-tags="html, css" data-content="Текст о верстке">Пост 2</li>
-                <li data-date="2023-12-20" data-views="50" data-tags="life, blog" data-content="Мои мысли сегодня">Пост 3</li>
-                <li data-date="2024-02-01" data-views="300" data-tags="js, react" data-content="Текст про реакт">Пост 4</li>
-                <li data-date="2023-05-10" data-views="1000" data-tags="news" data-content="Важное объявление">Пост 5</li>
+                <li data-date="2023-10-01" data-views="150" data-tags="js, frontend" data-content="Текст о формах">
+                    <span class="post-title">Пост 1</span>
+                    <div class="post-stats-node" style="font-size: 0.8em; color: gray;">
+                        <span class="stats-date"></span> | 
+                        <span class="stats-read-time"></span> | 
+                        <span class="stats-details"></span>
+                    </div>
+                </li>
+                
+                <li data-date="2024-01-15" data-views="500" data-tags="html, css" data-content="Текст о верстке">
+                    <span class="post-title">Пост 2</span>
+                    <div class="post-stats-node" style="font-size: 0.8em; color: gray;">
+                        <span class="stats-date"></span> | 
+                        <span class="stats-read-time"></span> | 
+                        <span class="stats-details"></span>
+                    </div>
+                </li>
+
+                <li data-date="2023-12-20" data-views="50" data-tags="life, blog" data-content="Мои мысли сегодня">
+                    <span class="post-title">Пост 3</span>
+                    <div class="post-stats-node" style="font-size: 0.8em; color: gray;">
+                        <span class="stats-date"></span> | 
+                        <span class="stats-read-time"></span> | 
+                        <span class="stats-details"></span>
+                    </div>
+                </li>
+
+                <li data-date="2024-02-01" data-views="300" data-tags="js, react" data-content="Текст про реакт">
+                    <span class="post-title">Пост 4</span>
+                    <div class="post-stats-node" style="font-size: 0.8em; color: gray;">
+                        <span class="stats-date"></span> | 
+                        <span class="stats-read-time"></span> | 
+                        <span class="stats-details"></span>
+                    </div>
+                </li>
+
+                <li data-date="2023-05-10" data-views="1000" data-tags="news" data-content="Важное объявление">
+                    <span class="post-title">Пост 5</span>
+                    <div class="post-stats-node" style="font-size: 0.8em; color: gray;">
+                        <span class="stats-date"></span> | 
+                        <span class="stats-read-time"></span> | 
+                        <span class="stats-details"></span>
+                    </div>
+                </li>
             </ul>
             <p id="no-results" style="display: none; color: red;">По вашему запросу ничего не найдено</p>
+
+            <select id="filter-readability">
+                <option value="0">Любая сложность</option>
+                <option value="20">Легкие</option>
+                <option value="40">Средние</option>
+                <option value="60">Сложные</option>
+            </select>
+
+            <button id="export-csv">Экспорт в CSV</button>
 
             <section id="blog-stats" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc;">
                 <h3>Статистика блога</h3>
