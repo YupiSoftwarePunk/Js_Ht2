@@ -120,6 +120,10 @@ function FilterPosts() {
     }
 
     update();
+
+    if (typeof initFormatting === 'function') {
+        initFormatting(posts); 
+    }
 }
 
 
