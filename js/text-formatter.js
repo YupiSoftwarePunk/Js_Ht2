@@ -44,9 +44,50 @@ const TextFormatter = {
         };
     },
 
-    formatCodeBlock: (code, language = 'javascript') => {
-        const safeCode = TextFormatter.escapeHtml(code);
-        return `<pre class="code-block" data-lang="${language}"><code>${safeCode}</code></pre>`;
+    formatCodeBlock: (code, language = 'javascript', theme = 'dark') => {
+        const pre = document.createElement('pre');
+        pre.className = `code-block code-theme-${theme}`;
+        pre.setAttribute('data-lang', language);
+        
+        const codeElement = document.createElement('code');
+        codeElement.textContent = code;
+        
+        pre.append(codeElement);
+        return pre;
+    },
+
+    createSanitizer: () => {
+        const allowedTags = ['B', 'I', 'U', 'P', 'BR', 'STRONG', 'EM'];
+        
+        return (htmlString) => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlString, 'text/html');
+            const fragment = document.createDocumentFragment();
+
+            const sanitize = (node, target) => {
+                node.childNodes.forEach(child => {
+                    if (child.nodeType === Node.TEXT_NODE) {
+                        target.append(document.createTextNode(child.textContent));
+                    } else if (child.nodeType === Node.ELEMENT_NODE && allowedTags.includes(child.tagName)) {
+                        const newElement = document.createElement(child.tagName);
+                        sanitize(child, newElement);
+                        target.append(newElement);
+                    }
+                });
+            };
+
+            sanitize(doc.body, fragment);
+            return fragment; 
+        };
+    },
+
+    formatAsync: async (text, formatterFunc) => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const result = formatterFunc(text);
+                resolve(result);
+            }, 0);
+        });
     }
 };
 
@@ -69,9 +110,6 @@ function initFormatting(posts) {
 
         posts.forEach(post => {
             if (post.element.style.display !== 'none') {
-                const originalText = post.content;
-                const formattedHtml = myHighlight(myTruncate(originalText));
-
                 const postBox = document.createElement('div');
                 postBox.className = 'modal-comparison-item';
                 postBox.style.marginBottom = '20px';
@@ -81,25 +119,26 @@ function initFormatting(posts) {
 
                 const diffContainer = document.createElement('div');
                 diffContainer.style.display = 'flex';
-                diffContainer.style.gap = '10px';
+                diffContainer.style.gap = '20px';
 
                 const before = document.createElement('div');
                 before.style.color = 'red';
                 const beforeLabel = document.createElement('b');
                 beforeLabel.textContent = 'До: ';
-                before.append(beforeLabel, document.createTextNode(originalText));
+                before.append(beforeLabel, document.createTextNode(post.content));
 
                 const after = document.createElement('div');
                 after.style.color = 'green';
                 const afterLabel = document.createElement('b');
                 afterLabel.textContent = 'После: ';
-                after.append(afterLabel);
+                
+                const afterContent = document.createElement('span');
+                const truncatedText = myTruncate(post.content);
+                myHighlight(truncatedText, afterContent); 
 
-                const afterSpan = document.createElement('span');
-                afterSpan.innerHTML = formattedHtml; 
-                after.append(afterSpan);
-
-                postBox.append(title, before, after);
+                after.append(afterLabel, afterContent);
+                diffContainer.append(before, after);
+                postBox.append(title, diffContainer);
                 modalContent.append(postBox);
             }
         });
@@ -112,4 +151,20 @@ function initFormatting(posts) {
         modal.style.display = 'none';
         overlay.style.display = 'none';
     });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    highlightActiveLink();
+    FilterPosts(); 
+});
+
+
+function debounce(func, delay = 300) {
+    let timeoutId;
+    return (...args) => {
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            func.apply(null, args);
+        }, delay);
+    };
 }
