@@ -184,3 +184,23 @@ mark { background: yellow; padding: 0 2px; }
 }
 .diff-before { background: #ffeef0; border-left: 4px solid #ff4757; }
 .diff-after { background: #e6ffed; border-left: 4px solid #2ed573; }
+
+
+.today-post {
+    border: 2px solid #ffd700;
+    background-color: #fff9e6;
+    padding: 10px;
+    border-radius: 8px;
+    position: relative;
+}
+
+.today-post::after {
+    content: "Сегодняшний пост";
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    background: #ffd700;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 4px;
+}

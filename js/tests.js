@@ -63,6 +63,3 @@ console.assert(/[а-яА-Я]/.test(formattedOld), "Ошибка: дата дол
 
 console.log("Тесты завершены!");
 console.groupEnd();
-
-
-

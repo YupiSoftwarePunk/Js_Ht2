@@ -8,6 +8,9 @@
         <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;500;700&display=swap" rel="stylesheet">
         <script src="js/main.js" defer></script>
         <script src="js/navigation.js" defer></script>
+        <script src="js/text-formatter.js"></script>
+        <script src="js/tests.js"></script>
+        <script src="js/collections.js"></script>
     </head>
 
     <body>
@@ -38,6 +41,11 @@
                 <option value="date">По дате (сначала новые)</option>
                 <option value="views">По просмотрам</option>
             </select>
+
+            <div id="tag-cloud" style="margin: 10px 0; padding: 10px; border: 1px dashed #ccc;">
+                <strong>Подборки по тегам:</strong>
+                <div id="tags-container"></div>
+            </div>
 
             <ul id="post-list">
                 <li data-date="2023-10-01" data-views="150" data-tags="js, frontend" data-content="Текст о формах">
@@ -78,6 +86,23 @@
 
                 <li data-date="2023-05-10" data-views="1000" data-tags="news" data-content="Важное объявление">
                     <span class="post-title">Пост 5</span>
+                    <div class="post-stats-node" style="font-size: 0.8em; color: gray;">
+                        <span class="stats-date"></span> | 
+                        <span class="stats-read-time"></span> | 
+                        <span class="stats-details"></span>
+                    </div>
+                </li>
+
+                <li data-date="2026-2-26" data-views="50" data-tags="life, blog" data-content="Мои мысли сегодня">
+                    <span class="post-title">Пост 6</span>
+                    <div class="post-stats-node" style="font-size: 0.8em; color: gray;">
+                        <span class="stats-date"></span> | 
+                        <span class="stats-read-time"></span> | 
+                        <span class="stats-details"></span>
+                    </div>
+                </li>
+                <li data-date="2026-2-28" data-views="50" data-tags="life, blog" data-content="Мои мысли сегодня">
+                    <span class="post-title">Пост 7</span>
                     <div class="post-stats-node" style="font-size: 0.8em; color: gray;">
                         <span class="stats-date"></span> | 
                         <span class="stats-read-time"></span> | 

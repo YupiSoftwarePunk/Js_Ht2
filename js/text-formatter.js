@@ -56,6 +56,28 @@ const TextFormatter = {
         return pre;
     },
 
+    HighlightTodayPosts: () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1; 
+        const day = now.getDate();
+
+
+        const todayString = `${year}-${month}-${day}`;
+
+        const todayPosts = document.querySelectorAll(`li[data-date="${todayString}"]`);
+
+        if (todayPosts.length > 0) {
+            todayPosts.forEach(post => {
+                post.classList.add('today-post');
+            });
+            console.log(`Подсвечено постов за сегодня: ${todayPosts.length}`);
+        } 
+        else {
+            console.log("Сегодняшних постов не найдено для даты: " + todayString);
+        }
+    },
+
     createSanitizer: () => {
         const allowedTags = ['B', 'I', 'U', 'P', 'BR', 'STRONG', 'EM'];
         

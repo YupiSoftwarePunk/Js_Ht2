@@ -37,4 +37,12 @@ window.onload = function ()
     highlightActiveLink();
 
     FilterPosts();
+
+    setTimeout(() => {
+        if (typeof TextFormatter !== 'undefined' && TextFormatter.HighlightTodayPosts) {
+            TextFormatter.HighlightTodayPosts();
+        } else {
+            console.error("Критическая ошибка: TextFormatter не определен!");
+        }
+    }, 100);
 };

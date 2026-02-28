@@ -213,8 +213,13 @@ function drawChart(visiblePosts) {
 function updateBlogStats(visiblePosts, container) {
     if (!container) return;
 
+    const totalReadTime = visiblePosts.reduce((sum, post) => {
+    return sum + (post.stats.readTime || 0);
+    }, 0);
+
     const totalWords = visiblePosts.reduce((acc, p) => acc + p.stats.words, 0);
-    const avgReadTime = visiblePosts.length ? (totalWords / (visiblePosts.length * 200)).toFixed(1) : 0;
+    // const avgReadTime = visiblePosts.length ? (totalWords / (visiblePosts.length * 200)).toFixed(1) : 0;
+        const avgReadTime = totalReadTime.toFixed(1);
 
     const tagsMap = {};
     visiblePosts.forEach(p => {
