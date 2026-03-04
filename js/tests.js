@@ -27,6 +27,40 @@ console.log("Тесты завершены!");
 console.groupEnd();
 
 
+const sanitizer = TextFormatter.createSanitizer();
+
+const getHTML = (fragment) => {
+    const div = document.createElement('div');
+    div.appendChild(fragment);
+    return div.innerHTML;
+};
+
+console.group("Тестирование Sanitizer");
+
+console.assert(getHTML(sanitizer("Просто текст")) === "Просто текст", 
+    "Ошибка: обычный текст должен оставаться без изменений");
+
+console.assert(getHTML(sanitizer("<b>Жирный</b> <i>Курсив</i>")) === "<b>Жирный</b> <i>Курсив</i>", 
+    "Ошибка: разрешенные теги (B, I) должны сохраняться");
+
+console.assert(getHTML(sanitizer("<div>Секрет</div>")) === "", 
+    "Ошибка: запрещенный тег DIV и его содержимое должны быть удалены");
+
+console.assert(getHTML(sanitizer("<script>alert('XSS')</script>")) === "", 
+    "Ошибка: тег SCRIPT должен быть полностью удален");
+
+console.assert(getHTML(sanitizer('<b onclick="alert(1)">Кликни меня</b>')) === "<b>Кликни меня</b>", 
+    "Ошибка: атрибуты (onclick) должны удаляться даже у разрешенных тегов");
+
+console.assert(getHTML(sanitizer("<p>Текст с <u>подчеркиванием</u></p>")) === "<p>Текст с <u>подчеркиванием</u></p>", 
+    "Ошибка: вложенные разрешенные теги должны сохранять структуру");
+
+console.assert(getHTML(sanitizer("")) === "", 
+    "Ошибка: пустая строка должна возвращать пустой результат");
+
+console.log("Тесты Sanitizer завершены!");
+console.groupEnd();
+
 
 console.group("Тесты: analyzeText");
 

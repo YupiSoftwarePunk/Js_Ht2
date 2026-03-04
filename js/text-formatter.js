@@ -30,9 +30,10 @@ const TextFormatter = {
     highlightKeywords: (keywords = [], className = 'highlight') => {
         return (text) => {
             if (!text) return '';
-            if (!keywords.length) return TextFormatter.escapeHtml(text);
-
             let safeText = TextFormatter.escapeHtml(text);
+            if (!keywords.length) return safeText;
+
+            // let safeText = TextFormatter.escapeHtml(text);
 
             const pattern = keywords
                 .map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
@@ -103,6 +104,19 @@ const TextFormatter = {
         };
     },
 
+    getStats: (text) => {
+        if (typeof text !== 'string' || !text.trim()) {
+            return { words: 0, sentences: 0, readability: 0 };
+        }
+
+        const chars = text.length;
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const avgWordLen = chars / (words || 1);
+    const complexity = words > 10 || avgWordLen > 6 ? "Сложный" : "Легкий";
+    
+    return { chars, words, complexity };
+    },
+
     formatAsync: async (text, formatterFunc) => {
         return new Promise((resolve) => {
             setTimeout(() => {
@@ -123,47 +137,60 @@ function initFormatting(posts) {
     if (!btn || !modal) return;
 
     btn.addEventListener('click', () => {
-        while (modalContent.firstChild) {
-            modalContent.removeChild(modalContent.firstChild);
-        }
+        modalContent.innerHTML = '';
+        let hasChanges = false;
 
-        const myTruncate = TextFormatter.truncate(40, '...'); 
-        const myHighlight = TextFormatter.highlightKeywords(['js', 'текст', 'реакт']);
+        const myTruncate = TextFormatter.truncate(40, '...');
+        const myHighlight = TextFormatter.highlightKeywords(['js', 'текст', 'реакт', 'код']);
 
         posts.forEach(post => {
-            if (post.element.style.display !== 'none') {
+            if (post.element.style.display === 'none') return;
+
+            const originalText = post.content;
+            const truncatedText = myTruncate(originalText);
+
+            // Проверяем: изменился ли текст (сократился или содержит ключевые слова для подсветки)
+            const isChanged = originalText !== truncatedText || /js|текст|реакт|код/i.test(originalText);
+
+            if (isChanged) {
+                hasChanges = true;
+                
                 const postBox = document.createElement('div');
                 postBox.className = 'modal-comparison-item';
-                postBox.style.marginBottom = '20px';
+                postBox.style.cssText = 'border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-bottom: 15px;';
 
                 const title = document.createElement('h4');
-                title.textContent = post.originalTitle;
+                title.textContent = post.originalTitle || 'Без названия';
 
-                const diffContainer = document.createElement('div');
-                diffContainer.style.display = 'flex';
-                diffContainer.style.gap = '20px';
+                const grid = document.createElement('div');
+                grid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 20px;';
 
+                // Левая часть: "До" (то, что ввел пользователь)
                 const before = document.createElement('div');
-                before.style.color = 'red';
                 const beforeLabel = document.createElement('b');
+                beforeLabel.style.color = '#e74c3c';
                 beforeLabel.textContent = 'До: ';
-                before.append(beforeLabel, document.createTextNode(post.content));
+                before.append(beforeLabel, document.createTextNode(originalText));
 
+                // Правая часть: "После" (авто-форматирование)
                 const after = document.createElement('div');
-                after.style.color = 'green';
                 const afterLabel = document.createElement('b');
+                afterLabel.style.color = '#27ae60';
                 afterLabel.textContent = 'После: ';
                 
-                const afterContent = document.createElement('span');
-                const truncatedText = myTruncate(post.content);
-                myHighlight(truncatedText, afterContent); 
+                const afterTextContainer = document.createElement('div');
+                myHighlight(truncatedText, afterTextContainer); // Сначала обрезаем, потом подсвечиваем
 
-                after.append(afterLabel, afterContent);
-                diffContainer.append(before, after);
-                postBox.append(title, diffContainer);
+                after.append(afterLabel, afterTextContainer);
+                grid.append(before, after);
+                postBox.append(title, grid);
                 modalContent.append(postBox);
             }
         });
+
+        if (!hasChanges) {
+            modalContent.innerHTML = '<p style="text-align:center">Нет изменений для отображения.</p>';
+        }
 
         modal.style.display = 'block';
         overlay.style.display = 'block';
@@ -175,11 +202,6 @@ function initFormatting(posts) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    highlightActiveLink();
-    FilterPosts(); 
-});
-
 
 function debounce(func, delay = 300) {
     let timeoutId;
@@ -189,4 +211,80 @@ function debounce(func, delay = 300) {
             func.apply(null, args);
         }, delay);
     };
+}
+
+
+function initPostDetails(postsData) {
+    const modal = document.getElementById('post-detail-modal');
+    const overlay = document.getElementById('post-detail-overlay');
+    const contentEdit = document.getElementById('detail-content-edit');
+    const previewContainer = document.getElementById('detail-preview-container');
+    const previewResult = document.getElementById('detail-formatted-result');
+
+    let currentPostIndex = null;
+
+    const postElements = document.querySelectorAll('#post-list li');
+    
+    postElements.forEach((el, index) => {
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', () => {
+            const post = postsData[index];
+            currentPostIndex = index;
+            
+            document.getElementById('detail-title').textContent = post.title;
+            document.getElementById('stat-date').textContent = post.date;
+            document.getElementById('stat-views').textContent = post.views;
+            contentEdit.value = post.content;
+            
+            updateLiveStats(post.content);
+
+            previewContainer.style.display = 'none';
+            
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+        });
+    });
+
+    function updateLiveStats(text) {
+        const stats = TextFormatter.getStats(text);
+        document.getElementById('stat-chars').textContent = stats.chars;
+        document.getElementById('stat-words').textContent = stats.words;
+        document.getElementById('stat-readability').textContent = stats.complexity;
+    }
+
+    contentEdit.addEventListener('input', () => {
+        updateLiveStats(contentEdit.value);
+    });
+
+    document.getElementById('detail-format-btn').addEventListener('click', () => {
+        const text = contentEdit.value;
+        const myTruncate = TextFormatter.truncate(50, '...'); 
+        const myHighlight = TextFormatter.highlightKeywords(['js', 'текст', 'реакт', 'код']);
+        
+        const truncated = myTruncate(text);
+        const highlightedHtml = myHighlight(truncated);
+        
+        previewResult.innerHTML = highlightedHtml;
+        previewContainer.style.display = 'block';
+    });
+
+    document.getElementById('detail-save-btn').addEventListener('click', () => {
+        if (currentPostIndex !== null) {
+            const newText = contentEdit.value;
+            postsData[currentPostIndex].content = newText;
+
+            const li = postElements[currentPostIndex];
+            li.setAttribute('data-content', newText);
+            
+            alert('Изменения сохранены!');
+        }
+    });
+
+    const close = () => {
+        modal.style.display = 'none';
+        overlay.style.display = 'none';
+    };
+    
+    document.getElementById('detail-close-btn').addEventListener('click', close);
+    overlay.addEventListener('click', close);
 }
