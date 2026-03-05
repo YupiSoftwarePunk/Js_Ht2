@@ -34,6 +34,8 @@ function CreatePosts(data)
     newItem.setAttribute('data-tags', data.tags);
     newItem.setAttribute('data-content', data.content);
 
+    newItem.style.cursor = 'pointer';
+
     let span = document.createElement('span');
     span.classList.add('post-title');
     span.textContent = data.title;
@@ -45,6 +47,7 @@ function CreatePosts(data)
 
     let spanDate = document.createElement('span');
     spanDate.classList.add('stats-date');
+    spanDate.textContent = data.date;
     
     let spanReadTime = document.createElement('span');
     spanReadTime.classList.add('stats-read-time');
@@ -53,8 +56,19 @@ function CreatePosts(data)
     spanDetails.classList.add('stats-details');
 
     div.append(spanDate, " | ", spanReadTime, " | ", spanDetails);
-    newItem.append(span, div);
-    
+
+    let contentPreviewDiv = document.createElement('div');
+    contentPreviewDiv.classList.add('post-content-preview');
+    contentPreviewDiv.style.marginTop = '10px';
+
+    if (typeof TextFormatter !== 'undefined') {
+        // const shortText = TextFormatter.truncate(100, '...')(data.content);
+        // contentPreviewDiv.innerHTML = TextFormatter.applyFullFormatting(shortText);
+        const formattedContent = TextFormatter.applyFullFormatting(data.content);
+        contentPreviewDiv.innerHTML = formattedContent;
+    }
+
+    newItem.append(span, div, contentPreviewDiv);
     posts.appendChild(newItem);
 }
 
@@ -73,46 +87,39 @@ window.onload = function ()
     var formattedDate = day + '.' + month + '.' + year;
     footer.textContent = "© 2026 Мистер Денискис. Все права защищены. Текущая дата: " + formattedDate;
 
-    highlightActiveLink();
-
-    FilterPosts();
+    if (typeof highlightActiveLink === 'function') highlightActiveLink();
+    if (typeof FilterPosts === 'function') FilterPosts();
 
     setTimeout(() => {
         if (typeof TextFormatter !== 'undefined' && TextFormatter.HighlightTodayPosts) {
             TextFormatter.HighlightTodayPosts();
         } else {
-            console.error("Критическая ошибка: TextFormatter не определен!");
+            console.error("Критическая ошибка: HighlightTodayPosts не определен!");
         }
     }, 100);
 };
 
 
 const postsData = [
-{ date: "2023-10-01", views: "150", tags: "js, frontend", content: "Текст о формах", title: "Пост 1" },
-{ date: "2024-01-15", views: "500", tags: "html, css", content: "Текст о верстке", title: "Пост 2" },
+{ date: "2023-10-01", views: "150", tags: "js, frontend", content: "```javascript\n" + `for (var i = 0; i < links.length; i++) \nconsole.log(link[i])` + "\n```", title: "Пост 1" },
+{ date: "2024-01-15", views: "500", tags: "html, css", content: "{}gsdfhjsa<>", title: "Пост 2" },
 { date: "2023-12-20", views: "50", tags: "life, blog", content: "Мои мысли сегодня", title: "Пост 3" },
 { date: "2024-02-01", views: "300", tags: "js, react", content: "Текст про реакт", title: "Пост 4" },
 { date: "2023-05-10", views: "1000", tags: "news", content: "Важное объявление", title: "Пост 5" },
 { date: "2026-2-26", views: "50", tags: "life, blog", content: "Мои мысли сегодня", title: "Пост 6" },
 { date: "2026-3-4", views: "50", tags: "life, blog", content: "Классный текст, ваще все круто", title: "Пост 7" }];
-    
-postsData.forEach(post => CreatePosts(post));
+
 
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof postsData !== 'undefined') {
         postsData.forEach(post => CreatePosts(post));
     }
 
-    const postsInDom = document.querySelectorAll('#post-list li');
-    
-    const formattedPostsArray = Array.from(postsInDom).map(li => {
-        return {
-            element: li,
-            originalTitle: li.querySelector('.post-title')?.textContent || "Без названия",
-            content: li.getAttribute('data-content') || ""
-        };
-    });
-});
-setTimeout(() => {
-        initPostDetails(postsData);
+    setTimeout(() => {
+        if (typeof initPostDetails === 'function') {
+            initPostDetails(postsData);
+        } else {
+            console.error("Ошибка: initPostDetails не найдена. Проверьте подключение text_formatter.js");
+        }
     }, 200);
+});

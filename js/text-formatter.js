@@ -79,6 +79,57 @@ const TextFormatter = {
         }
     },
 
+    syntaxHighlight: (code) => {
+    let html = code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    html = html
+        .replace(/("(.*?)"|'(.*?)'|`(.*?)`)/g, '<span class="token-string">$1</span>')
+        .replace(/(\/\/.*)/g, '<span class="token-comment">$1</span>');
+
+    return html
+        .replace(/\b(const|let|var|function|return|if|else|for|while|import|export|class|new|async|await)\b/g, '<span class="token-keyword">$1</span>')
+        .replace(/\b(console|window|document|Math|JSON|Object|Array)\b/g, '<span class="token-builtin">$1</span>')
+        .replace(/\b(\d+)\b/g, '<span class="token-number">$1</span>');
+    },
+
+    toggleCodeTheme: (element) => {
+        if (element && element.classList.contains('code-block')) {
+            element.classList.toggle('code-theme-light');
+            element.classList.toggle('is-active'); 
+        }
+    },
+
+    applyFullFormatting: (text) => {
+        if (!text) return '';
+
+        const codeRegex = /\`\`\`(?:(\w+)\n)?([\s\S]*?)\`\`\`/g;
+        
+        let lastIndex = 0;
+        let resultHtml = "";
+        let match;
+
+        const keywordHighlighter = TextFormatter.highlightKeywords(['js', 'текст', 'реакт', 'код']);
+
+        while ((match = codeRegex.exec(text)) !== null) {
+            const plainText = text.substring(lastIndex, match.index);
+            resultHtml += keywordHighlighter(plainText);
+
+            const lang = match[1] || 'javascript'; 
+            const codeContent = match[2].trim();
+            const highlightedCode = TextFormatter.syntaxHighlight(codeContent);
+
+            resultHtml += `<pre class="code-block" data-lang="${lang}"><code>${highlightedCode}</code></pre>`;
+
+            lastIndex = codeRegex.lastIndex;
+        }
+        resultHtml += keywordHighlighter(text.substring(lastIndex));
+
+        return resultHtml;
+    },
+
     createSanitizer: () => {
         const allowedTags = ['B', 'I', 'U', 'P', 'BR', 'STRONG', 'EM'];
         
@@ -140,19 +191,15 @@ function initFormatting(posts) {
         modalContent.innerHTML = '';
         let hasChanges = false;
 
-        const myTruncate = TextFormatter.truncate(40, '...');
-        const myHighlight = TextFormatter.highlightKeywords(['js', 'текст', 'реакт', 'код']);
-
         posts.forEach(post => {
             if (post.element.style.display === 'none') return;
 
             const originalText = post.content;
-            const truncatedText = myTruncate(originalText);
+            // ВАЖНО: Вызываем форматирование только один раз!
+            const formattedHtml = TextFormatter.applyFullFormatting(originalText);
 
-            // Проверяем: изменился ли текст (сократился или содержит ключевые слова для подсветки)
-            const isChanged = originalText !== truncatedText || /js|текст|реакт|код/i.test(originalText);
-
-            if (isChanged) {
+            // Если текст изменился (появились теги или подсветка), считаем это изменением
+            if (originalText !== formattedHtml) {
                 hasChanges = true;
                 
                 const postBox = document.createElement('div');
@@ -165,23 +212,16 @@ function initFormatting(posts) {
                 const grid = document.createElement('div');
                 grid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 20px;';
 
-                // Левая часть: "До" (то, что ввел пользователь)
+                // Левая часть: "До"
                 const before = document.createElement('div');
-                const beforeLabel = document.createElement('b');
-                beforeLabel.style.color = '#e74c3c';
-                beforeLabel.textContent = 'До: ';
-                before.append(beforeLabel, document.createTextNode(originalText));
+                before.innerHTML = `<b>До:</b> <pre style="white-space: pre-wrap;">${originalText}</pre>`;
 
-                // Правая часть: "После" (авто-форматирование)
+                // Правая часть: "После"
                 const after = document.createElement('div');
-                const afterLabel = document.createElement('b');
-                afterLabel.style.color = '#27ae60';
-                afterLabel.textContent = 'После: ';
-                
                 const afterTextContainer = document.createElement('div');
-                myHighlight(truncatedText, afterTextContainer); // Сначала обрезаем, потом подсвечиваем
+                afterTextContainer.innerHTML = `<b>После:</b> ${formattedHtml}`;
+                after.append(afterTextContainer);
 
-                after.append(afterLabel, afterTextContainer);
                 grid.append(before, after);
                 postBox.append(title, grid);
                 modalContent.append(postBox);
@@ -194,11 +234,6 @@ function initFormatting(posts) {
 
         modal.style.display = 'block';
         overlay.style.display = 'block';
-    });
-
-    overlay.addEventListener('click', () => {
-        modal.style.display = 'none';
-        overlay.style.display = 'none';
     });
 }
 
@@ -222,63 +257,25 @@ function initPostDetails(postsData) {
     const previewResult = document.getElementById('detail-formatted-result');
 
     let currentPostIndex = null;
-
     const postElements = document.querySelectorAll('#post-list li');
     
     postElements.forEach((el, index) => {
-        el.style.cursor = 'pointer';
         el.addEventListener('click', () => {
             const post = postsData[index];
             currentPostIndex = index;
-            
             document.getElementById('detail-title').textContent = post.title;
-            document.getElementById('stat-date').textContent = post.date;
-            document.getElementById('stat-views').textContent = post.views;
             contentEdit.value = post.content;
-            
-            updateLiveStats(post.content);
-
             previewContainer.style.display = 'none';
-            
             modal.style.display = 'block';
             overlay.style.display = 'block';
         });
     });
 
-    function updateLiveStats(text) {
-        const stats = TextFormatter.getStats(text);
-        document.getElementById('stat-chars').textContent = stats.chars;
-        document.getElementById('stat-words').textContent = stats.words;
-        document.getElementById('stat-readability').textContent = stats.complexity;
-    }
-
-    contentEdit.addEventListener('input', () => {
-        updateLiveStats(contentEdit.value);
-    });
-
-    document.getElementById('detail-format-btn').addEventListener('click', () => {
+    document.getElementById('detail-format-btn').onclick = () => {
         const text = contentEdit.value;
-        const myTruncate = TextFormatter.truncate(50, '...'); 
-        const myHighlight = TextFormatter.highlightKeywords(['js', 'текст', 'реакт', 'код']);
-        
-        const truncated = myTruncate(text);
-        const highlightedHtml = myHighlight(truncated);
-        
-        previewResult.innerHTML = highlightedHtml;
+        previewResult.innerHTML = TextFormatter.applyFullFormatting(text);
         previewContainer.style.display = 'block';
-    });
-
-    document.getElementById('detail-save-btn').addEventListener('click', () => {
-        if (currentPostIndex !== null) {
-            const newText = contentEdit.value;
-            postsData[currentPostIndex].content = newText;
-
-            const li = postElements[currentPostIndex];
-            li.setAttribute('data-content', newText);
-            
-            alert('Изменения сохранены!');
-        }
-    });
+    };
 
     const close = () => {
         modal.style.display = 'none';
