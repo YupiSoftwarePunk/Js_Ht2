@@ -277,6 +277,27 @@ function initPostDetails(postsData) {
         previewContainer.style.display = 'block';
     };
 
+    document.getElementById('detail-save-btn').onclick = () => {
+        if (currentPostIndex !== null) {
+            const newText = contentEdit.value;
+
+            postsData[currentPostIndex].content = newText;
+
+            const li = postElements[currentPostIndex];
+            li.setAttribute('data-content', newText); 
+
+            const previewDiv = li.querySelector('.post-content-preview');
+            if (previewDiv) {
+                previewDiv.innerHTML = TextFormatter.applyFullFormatting(newText);
+            }
+
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+
+            console.log('Пост успешно обновлен в памяти');
+        }
+    };
+
     const close = () => {
         modal.style.display = 'none';
         overlay.style.display = 'none';
