@@ -71,6 +71,8 @@ const TextFormatter = {
         if (todayPosts.length > 0) {
             todayPosts.forEach(post => {
                 post.classList.add('today-post');
+                post.style.borderLeft = "4px solid #ff4757";
+                post.style.background = "#fffafa";
             });
             console.log(`Подсвечено постов за сегодня: ${todayPosts.length}`);
         } 
@@ -157,15 +159,17 @@ const TextFormatter = {
 
     getStats: (text) => {
         if (typeof text !== 'string' || !text.trim()) {
-            return { words: 0, sentences: 0, readability: 0 };
+            return { chars: 0, words: 0, complexity: "Легкий" };
         }
 
         const chars = text.length;
-    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-    const avgWordLen = chars / (words || 1);
-    const complexity = words > 10 || avgWordLen > 6 ? "Сложный" : "Легкий";
-    
-    return { chars, words, complexity };
+        const words = text.trim().split(/\s+/).length;
+
+        let complexity = "Легкий";
+        if (words > 50 || chars > 300) complexity = "Средний";
+        if (words > 100 || text.includes("```")) complexity = "Сложный";
+        
+        return { chars, words, complexity };
     },
 
     formatAsync: async (text, formatterFunc) => {
@@ -265,6 +269,13 @@ function initPostDetails(postsData) {
             currentPostIndex = index;
             document.getElementById('detail-title').textContent = post.title;
             contentEdit.value = post.content;
+            const stats = TextFormatter.getStats(post.content);
+            document.getElementById('stat-date').textContent = post.date;
+            document.getElementById('stat-views').textContent = post.views;
+            document.getElementById('stat-chars').textContent = stats.chars;
+            document.getElementById('stat-words').textContent = stats.words;
+            document.getElementById('stat-readability').textContent = stats.complexity;
+
             previewContainer.style.display = 'none';
             modal.style.display = 'block';
             overlay.style.display = 'block';

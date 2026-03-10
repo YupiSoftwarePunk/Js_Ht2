@@ -51,9 +51,13 @@ function CreatePosts(data)
     
     let spanReadTime = document.createElement('span');
     spanReadTime.classList.add('stats-read-time');
+
+    const wordCount = data.content.split(/\s+/).length;
+    spanReadTime.textContent = `Время чтения: ${Math.ceil(wordCount / 200)} мин.`;
     
     let spanDetails = document.createElement('span');
     spanDetails.classList.add('stats-details');
+    spanDetails.textContent = `Теги: ${data.tags}`;
 
     div.append(spanDate, " | ", spanReadTime, " | ", spanDetails);
 
@@ -107,7 +111,7 @@ const postsData = [
 { date: "2024-02-01", views: "300", tags: "js, react", content: "Текст про реакт", title: "Пост 4" },
 { date: "2023-05-10", views: "1000", tags: "news", content: "Важное объявление", title: "Пост 5" },
 { date: "2026-2-26", views: "50", tags: "life, blog", content: "Мои мысли сегодня", title: "Пост 6" },
-{ date: "2026-3-4", views: "50", tags: "life, blog", content: "Классный текст, ваще все круто", title: "Пост 7" }];
+{ date: "2026-3-10", views: "50", tags: "life, blog", content: "Классный текст, ваще все круто", title: "Пост 7" }];
 
 
 document.addEventListener('DOMContentLoaded', () => {
